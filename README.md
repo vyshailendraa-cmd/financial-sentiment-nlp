@@ -38,33 +38,41 @@ Macro-F1 on each test set with 95% bootstrap confidence intervals. The full tabl
 | Model | News → News | News → Twitter | Twitter → Twitter | Twitter → News |
 |---|---|---|---|---|
 | Loughran-McDonald lexicon (no training) | 0.462 | 0.444 | 0.444 | 0.462 |
-| TF-IDF + logistic regression | **0.884** [0.846, 0.917] | 0.415 [0.392, 0.438] | **0.770** [0.750, 0.791] | 0.661 [0.610, 0.711] |
-| DistilBERT (fine-tuned) | *pending, see below* | | | |
-| FinBERT (fine-tuned) | *pending, see below* | | | |
+| TF-IDF + logistic regression | 0.884 [0.846, 0.917] | 0.415 [0.392, 0.438] | 0.770 [0.750, 0.791] | 0.661 [0.610, 0.711] |
+| DistilBERT (fine-tuned) | **0.951** [0.925, 0.972] | 0.594 [0.571, 0.618] | 0.822 [0.803, 0.841] | **0.843** [0.801, 0.875] |
+| FinBERT (fine-tuned) | **0.951** [0.923, 0.973] | **0.677** [0.656, 0.700] | **0.825** [0.807, 0.844] | 0.839 [0.799, 0.876] |
 
 ![Macro-F1 by setting](results/figures/macro_f1_by_setting.png)
 
 ![Confusion matrices](results/figures/confusion_news_model.png)
 
-## Findings so far
+## Findings
 
-1. **In-domain, a simple model is already strong.** TF-IDF + logistic regression
-   reaches 0.88 macro-F1 on news and 0.77 on tweets.
-2. **Transfer from news to Twitter collapses.** The news-trained model scores 0.415
-   on tweets, *worse than the untrained lexicon* (0.444). It labels 84% of bearish
-   tweets and 77% of bullish tweets as neutral.
-3. **The failure is about vocabulary, not noise.** In news sentences, sentiment comes
+1. **Fine-tuned transformers beat the bag-of-words model everywhere.** In-domain they
+   reach 0.95 macro-F1 on news (vs 0.88) and 0.82 on tweets (vs 0.77).
+2. **Transfer from news to Twitter is the hard case.** The news-trained TF-IDF model
+   scores 0.415 on tweets, *worse than the untrained lexicon* (0.444). It labels 84% of
+   bearish tweets and 77% of bullish tweets as neutral.
+3. **Finance-specific pre-training is what closes the gap.** On news to Twitter, DistilBERT
+   recovers to 0.594, while FinBERT reaches **0.677**, about 8 points higher, with
+   non-overlapping 95% intervals. Everywhere else the two transformers are
+   statistically tied. The domain pre-training matters only once the training text and
+   deployment text differ.
+4. **The failure is about vocabulary, not noise.** In news sentences, sentiment comes
    from reported figures ("profit *rose*", "sales *decreased*"). In finance tweets
    it mostly comes from analyst actions ("*upgraded to Buy*", "*cuts to Sell*", "*target
-   trimmed*", "*joins the bull camp*"), phrases that never appear in the news corpus.
-   The highest-weighted features of each model ([`results/top_features.json`](results/top_features.json)) show this directly.
-4. **The transfer is asymmetric.** Training on Twitter and testing on news holds up much
-   better (0.661). The tweet training set is about six times larger and contains both
-   kinds of language.
+   trimmed*"), phrases that never appear in the news corpus. The highest-weighted TF-IDF
+   features ([`results/top_features.json`](results/top_features.json)) show this directly.
+   FinBERT's pre-training corpus (filings, analyst reports, earnings calls) contains
+   this language, which is why it transfers better.
+5. **Transfer is asymmetric.** Training on Twitter and testing on news holds up well
+   (0.84 for both transformers). The tweet training set is about six times larger and
+   contains both kinds of language.
 
-The open question for the transformer runs is whether pre-training, and especially
-finance-specific pre-training (FinBERT), closes the cross-domain gap that the
-bag-of-words model cannot.
+**Practical takeaway:** for a desk deploying a sentiment model on a new text source
+without labelled data from it, a finance-pre-trained model is the safer default.
+Even then, a 0.95 in-domain score drops to about 0.68 on a new source, so a small
+labelled sample from the target source is worth collecting.
 
 ## Run it
 
@@ -78,7 +86,7 @@ pytest -q
 ```
 
 **Transformers:** open [`notebooks/colab_finetune.ipynb`](notebooks/colab_finetune.ipynb)
-in Google Colab with a free T4 GPU (about 15 minutes for all four runs), or run locally:
+in Google Colab with a free T4 GPU (about 10 minutes for all four runs; results in the table were produced this way), or run locally:
 
 ```bash
 python train_transformer.py --model distilbert-base-uncased --train phrasebank

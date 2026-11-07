@@ -53,8 +53,19 @@ def load_pretrained(name: str, num_labels: int = 3):
         from huggingface_hub import hf_hub_download
         from transformers import BertTokenizerFast
 
-        vocab = hf_hub_download(name, "vocab.txt")
-        tok = BertTokenizerFast(vocab_file=vocab, do_lower_case=True)
+        path = hf_hub_download(name, "vocab.txt")
+        with open(path, encoding="utf-8") as f:
+            vocab = {line.rstrip("\n"): i for i, line in enumerate(f)}
+        # transformers v5 takes `vocab=` and silently ignores `vocab_file=` (which left
+        # a 5-token vocab, so ~93% of tokens became [UNK]); v4 needs `vocab_file=`.
+        try:
+            tok = BertTokenizerFast(vocab=vocab, do_lower_case=True)
+        except TypeError:
+            tok = BertTokenizerFast(vocab_file=path, do_lower_case=True)
+        if len(tok) < 1000:
+            tok = BertTokenizerFast(vocab_file=path, do_lower_case=True)
+    if len(tok) < 1000:
+        raise RuntimeError(f"{name}: tokenizer has only {len(tok)} tokens; vocab failed to load")
     kwargs = dict(num_labels=num_labels, ignore_mismatched_sizes=True,
                   id2label=dict(enumerate(LABELS)), label2id={l: i for i, l in enumerate(LABELS)})
     try:

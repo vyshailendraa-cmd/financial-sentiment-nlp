@@ -1,0 +1,90 @@
+{
+  "phrasebank": {
+    "negative": [
+      "down",
+      "decreased",
+      "fell",
+      "decreased to",
+      "down from",
+      "operating loss",
+      "fell to",
+      "fell by",
+      "to eur",
+      "to profit",
+      "decreased by",
+      "profit decreased"
+    ],
+    "neutral": [
+      "is",
+      "and",
+      "and operating",
+      "the",
+      "be",
+      "will be",
+      "range",
+      "as",
+      "an operating",
+      "01",
+      "and an",
+      "com"
+    ],
+    "positive": [
+      "up",
+      "rose",
+      "increased",
+      "grew",
+      "up from",
+      "rose to",
+      "increase",
+      "profit rose",
+      "year",
+      "rise",
+      "from",
+      "mn up"
+    ]
+  },
+  "twitter": {
+    "negative": [
+      "misses",
+      "down",
+      "lower",
+      "target cut",
+      "hit",
+      "bear",
+      "cut to",
+      "sell",
+      "weak",
+      "sues",
+      "downgraded",
+      "cut"
+    ],
+    "neutral": [
+      "but",
+      "how",
+      "ticker url",
+      "trump",
+      "declares",
+      "ticker ticker",
+      "his",
+      "prices url",
+      "stock marketscreener",
+      "up to",
+      "for",
+      "stock url"
+    ],
+    "positive": [
+      "up",
+      "rises",
+      "jump",
+      "positive",
+      "beats on",
+      "target raised",
+      "rose",
+      "raised",
+      "raised to",
+      "higher",
+      "pre",
+      "bullish"
+    ]
+  }
+}

@@ -44,11 +44,26 @@ def build_smoke_model(texts, num_labels: int = 3):
 def load_pretrained(name: str, num_labels: int = 3):
     from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-    tok = AutoTokenizer.from_pretrained(name)
-    model = AutoModelForSequenceClassification.from_pretrained(
-        name, num_labels=num_labels, ignore_mismatched_sizes=True,
-        id2label=dict(enumerate(LABELS)), label2id={l: i for i, l in enumerate(LABELS)},
-    )
+    try:
+        tok = AutoTokenizer.from_pretrained(name)
+    except ValueError:
+        # Some older BERT checkpoints (e.g. yiyanghkust/finbert-pretrain) ship only a
+        # vocab.txt. Recent transformers versions can fail to convert those, so build
+        # the fast WordPiece tokenizer directly from the vocabulary file.
+        from huggingface_hub import hf_hub_download
+        from transformers import BertTokenizerFast
+
+        vocab = hf_hub_download(name, "vocab.txt")
+        tok = BertTokenizerFast(vocab_file=vocab, do_lower_case=True)
+    kwargs = dict(num_labels=num_labels, ignore_mismatched_sizes=True,
+                  id2label=dict(enumerate(LABELS)), label2id={l: i for i, l in enumerate(LABELS)})
+    try:
+        model = AutoModelForSequenceClassification.from_pretrained(name, **kwargs)
+    except ValueError:
+        # Older BERT checkpoints may omit "model_type" from config.json; load as BERT explicitly.
+        from transformers import BertForSequenceClassification
+
+        model = BertForSequenceClassification.from_pretrained(name, **kwargs)
     return tok, model
 
 
